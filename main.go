@@ -14,6 +14,7 @@ func main() {
 	router := httprouter.New()
 
 	router.GET("/", controller.Index)
+	router.POST("/dfs/upload", controller.FileUpload)
 
 	err := http.ListenAndServe(":8080", router)
 	if err != nil {
