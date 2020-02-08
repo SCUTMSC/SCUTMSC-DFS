@@ -6,11 +6,11 @@ import (
 
 // FileMeta is the metadata of a file
 type FileMeta struct {
-	FileSha1     string
-	FileName     string
-	FileSize     int64
-	FileLocation string
-	UploadAt     string
+	FileSha1 string
+	FileName string
+	FileSize int64
+	FilePath string
+	UploadAt string
 }
 
 var fileMetas map[string]FileMeta

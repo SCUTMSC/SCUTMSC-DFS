@@ -42,14 +42,14 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Define the metadata of a file
 	fileMeta := meta.FileMeta{
-		FileName:     fileHeader.Filename,
-		FileLocation: "./storage/tmp/" + fileHeader.Filename,
-		UploadAt:     time.Now().Format("2006-01-02 15:04:05"),
+		FileName: fileHeader.Filename,
+		FilePath: "./storage/tmp/" + fileHeader.Filename,
+		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	// Create a local file to store the uploaded file
 	err = os.MkdirAll("./storage/tmp/", os.ModePerm)
-	localFile, err := os.Create(fileMeta.FileLocation)
+	localFile, err := os.Create(fileMeta.FilePath)
 	if err != nil {
 		log.Fatal("Failed to create file when uploading, err: \n" + err.Error())
 
@@ -83,7 +83,33 @@ func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 // FileDownload is to handle browser clients downloading files from the http server.
 func FileDownload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ...
+	// Parse the http request
+	fileSha1 := ps.ByName("fileHash")
+	fileMeta := meta.GetFileMeta(fileSha1)
+
+	// Open the local file to prepare the downloading file
+	file, err := os.Open(fileMeta.FilePath)
+	if err != nil {
+		log.Fatal("Failed to open file when downloading, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Read the file from physical disks
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal("Failed to read file when downloading, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Return the http response
+	w.Header().Set("Content-Type", "application/octect-stream")
+	w.Header().Set("Content-Disposition", "attachment; filename="+"\""+fileMeta.FileName+"\"")
+	w.Write(data)
 }
 
 // SingleFileQuery is to handle querying files' metadata by fileHash.
