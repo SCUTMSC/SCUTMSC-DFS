@@ -11,6 +11,7 @@ type FileMeta struct {
 	FileSize int64
 	FilePath string
 	UploadAt string
+	ModifyAt string
 }
 
 var fileMetas map[string]FileMeta

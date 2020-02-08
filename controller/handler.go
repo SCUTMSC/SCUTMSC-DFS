@@ -45,6 +45,7 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		FileName: fileHeader.Filename,
 		FilePath: "./storage/tmp/" + fileHeader.Filename,
 		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
+		ModifyAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	// Create a local file to store the uploaded file
@@ -91,6 +92,8 @@ func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fileSha1 := r.Form.Get("fileHash")
 	fileName := r.Form.Get("fileName")
 	fileMeta := meta.GetFileMeta(fileSha1)
+	oriFilePath := fileMeta.FilePath
+	newFilePath := "./storage/tmp/" + fileName
 
 	// Check whether the option type is legal
 	if optionType != "0" {
@@ -100,8 +103,18 @@ func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		return
 	}
 
+	// Update the data of a file
+	if err := os.Rename(oriFilePath, newFilePath); err != nil {
+		log.Fatal("Failed to rename file when updating, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	// Update the metadata of a file
 	fileMeta.FileName = fileName
+	fileMeta.FilePath = newFilePath
+	fileMeta.ModifyAt = time.Now().Format("2006-01-02 15:04:05")
 	meta.SetFileMeta(fileSha1, fileMeta)
 
 	// Return the http response
@@ -186,5 +199,29 @@ func BatchFilesQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 
 // FileDelete is to handle browser clients deleting files on the http server.
 func FileDelete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ...
+	// Parse the http request
+	r.ParseForm()
+	fileSha1 := r.Form.Get("fileHash")
+	fileMeta := meta.GetFileMeta(fileSha1)
+
+	// Delete the data of a file
+	if err := os.Remove(fileMeta.FilePath); err != nil {
+		log.Fatal("Failed to remove file when deleting, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Delete the metadata of a file
+	meta.DeleteFileMeta(fileSha1)
+
+	// Return the http response
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		log.Fatal("Failed to convert fileMeta to JSON, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
 }
