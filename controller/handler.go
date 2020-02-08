@@ -72,13 +72,47 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fileMeta.FileSha1 = util.FileSha1(localFile)
 	meta.CreateFileMeta(fileMeta)
 
-	// Return the http response to inform the uploading success
-	w.Write([]byte("Uploading files succeeded."))
+	// Return the http response to show the uploaded file
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		log.Fatal("Failed to convert fileMeta to JSON, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
 }
 
 // FileUpdate is to handle updating files' metadata.
 func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ...
+	// Parse the http request
+	r.ParseForm()
+	optionType := r.Form.Get("optionType")
+	fileSha1 := r.Form.Get("fileHash")
+	fileName := r.Form.Get("fileName")
+	fileMeta := meta.GetFileMeta(fileSha1)
+
+	// Check whether the option type is legal
+	if optionType != "0" {
+		log.Fatal("Failed to access rights to rename files, err: \n" + "option type error occurs")
+
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	// Update the metadata of a file
+	fileMeta.FileName = fileName
+	meta.SetFileMeta(fileSha1, fileMeta)
+
+	// Return the http response
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		log.Fatal("Failed to convert fileMeta to JSON, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(data)
 }
 
 // FileDownload is to handle browser clients downloading files from the http server.

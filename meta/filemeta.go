@@ -27,8 +27,8 @@ func CreateFileMeta(fileMeta FileMeta) {
 }
 
 // SetFileMeta is to update the metadata of a file
-func SetFileMeta(fileMeta FileMeta) {
-	key := fileMeta.FileSha1
+func SetFileMeta(fileSha1 string, fileMeta FileMeta) {
+	key := fileSha1
 	value := fileMeta
 	fileMetas[key] = value
 }
