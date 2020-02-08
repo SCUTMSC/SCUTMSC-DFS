@@ -15,6 +15,8 @@ func main() {
 
 	router.GET("/", controller.Index)
 	router.POST("/dfs/upload", controller.FileUpload)
+	router.GET("/dfs/query/filehash/:fileHash", controller.SingleFileQuery)
+	router.GET("/dfs/query/limitcount/:limitCount", controller.BatchFilesQuery)
 
 	err := http.ListenAndServe(":8080", router)
 	if err != nil {

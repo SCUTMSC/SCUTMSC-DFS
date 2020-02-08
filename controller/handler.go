@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/julienschmidt/httprouter"
@@ -32,6 +34,7 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		log.Fatal("Failed to read file when uploading, err: \n" + err.Error())
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -49,6 +52,7 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	localFile, err := os.Create(fileMeta.FileLocation)
 	if err != nil {
 		log.Fatal("Failed to create file when uploading, err: \n" + err.Error())
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -58,6 +62,7 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	fileMeta.FileSize, err = io.Copy(localFile, file)
 	if err != nil {
 		log.Fatal("Failed to write file when uploading, err: \n" + err.Error())
+
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -81,9 +86,42 @@ func FileDownload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	// ...
 }
 
-// FileQuery is to handle querying files' metadata.
-func FileQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// ...
+// SingleFileQuery is to handle querying files' metadata by fileHash.
+func SingleFileQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	fileSha1 := ps.ByName("fileHash")
+
+	// Use file hash to query file's metadata
+	fileMeta := meta.GetFileMeta(fileSha1)
+	data, err := json.Marshal(fileMeta)
+	if err != nil {
+		log.Fatal("Failed to convert fileMeta to JSON, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Return the http response
+	w.Write(data)
+}
+
+// BatchFilesQuery is to handle querying files' metadata by limitCount.
+func BatchFilesQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	limitCount, _ := strconv.Atoi(ps.ByName("limitCount"))
+
+	// Use limit count to query files' metadata
+	fileMetas := meta.GetFileMetasByUploadAt(limitCount)
+	data, err := json.Marshal(fileMetas)
+	if err != nil {
+		log.Fatal("Failed to convert fileMetas to JSON, err: \n" + err.Error())
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Return the http response
+	w.Write(data)
 }
 
 // FileDelete is to handle browser clients deleting files on the http server.
