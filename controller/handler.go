@@ -31,6 +31,20 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 // FileUpload is to handle browser clients uploading files to the http server.
 func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
+	r.ParseForm()
+	var enableTimes int
+	var enableDays int
+	if r.Form.Get("enable_times") == "" {
+		enableTimes = 9999999 // Enable to download files 9999999 times in default
+	} else {
+		enableTimes, _ = strconv.Atoi(r.Form.Get("enable_times"))
+	}
+	if r.Form.Get("enable_days") == "" {
+		enableDays = 30 // Enable to download files in 30 days in default
+	} else {
+		enableDays, _ = strconv.Atoi(r.Form.Get("enable_days"))
+	}
+
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		log.Fatal("Failed to read file when uploading, err: \n" + err.Error())
@@ -42,10 +56,12 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Define the metadata of a file
 	fileMeta := meta.FileMeta{
-		FileName: fileHeader.Filename,
-		FilePath: "./storage/tmp/" + fileHeader.Filename,
-		UploadAt: time.Now().Format("2006-01-02 15:04:05"),
-		ModifyAt: time.Now().Format("2006-01-02 15:04:05"),
+		FileName:    fileHeader.Filename,
+		FilePath:    "./storage/tmp/" + fileHeader.Filename,
+		EnableTimes: int64(enableTimes),
+		EnableDays:  int64(enableDays),
+		CreateAt:    time.Now().Format("2006-01-02 15:04:05"),
+		UpdateAt:    time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	// Create a local file to store the uploaded file
@@ -114,7 +130,7 @@ func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Update the metadata of a file
 	fileMeta.FileName = fileName
 	fileMeta.FilePath = newFilePath
-	fileMeta.ModifyAt = time.Now().Format("2006-01-02 15:04:05")
+	fileMeta.UpdateAt = time.Now().Format("2006-01-02 15:04:05")
 	meta.SetFileMeta(fileSha1, fileMeta)
 
 	// Return the http response
@@ -184,7 +200,7 @@ func BatchFilesQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	limitCount, _ := strconv.Atoi(ps.ByName("limitCount"))
 
 	// Use limit count to query files' metadata
-	fileMetas := meta.GetFileMetasByUploadAt(limitCount)
+	fileMetas := meta.GetFileMetasByCreateAt(limitCount)
 	data, err := json.Marshal(fileMetas)
 	if err != nil {
 		log.Fatal("Failed to convert fileMetas to JSON, err: \n" + err.Error())

@@ -6,12 +6,14 @@ import (
 
 // FileMeta is the metadata of a file
 type FileMeta struct {
-	FileSha1 string
-	FileName string
-	FileSize int64
-	FilePath string
-	UploadAt string
-	ModifyAt string
+	FileSha1    string
+	FileName    string
+	FileSize    int64
+	FilePath    string
+	EnableTimes int64
+	EnableDays  int64
+	CreateAt    string
+	UpdateAt    string
 }
 
 var fileMetas map[string]FileMeta
@@ -39,8 +41,8 @@ func GetFileMeta(fileSha1 string) FileMeta {
 	return fileMetas[fileSha1]
 }
 
-// GetFileMetasByUploadAt is to retrieve the metadata of files by UploadAt
-func GetFileMetasByUploadAt(limitCount int) []FileMeta {
+// GetFileMetasByCreateAt is to retrieve the metadata of files by CreateAt
+func GetFileMetasByCreateAt(limitCount int) []FileMeta {
 	// Convert map to array of file metadata
 	var fileMetaArray []FileMeta
 	for _, fileMeta := range fileMetas {
@@ -48,7 +50,7 @@ func GetFileMetasByUploadAt(limitCount int) []FileMeta {
 	}
 
 	// Sort by upload time
-	sort.Sort(ByUploadAt(fileMetaArray))
+	sort.Sort(ByCreateAt(fileMetaArray))
 
 	// Return the specified number of files
 	return fileMetaArray[0:limitCount]
