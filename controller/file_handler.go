@@ -16,20 +16,8 @@ import (
 	"../util"
 )
 
-// Index is to handle directing to upload.html
-func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	data, err := ioutil.ReadFile("./view/upload.html")
-	if err != nil {
-		log.Fatal("Failed to read upload.html, err: \n" + err.Error())
-
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.Write(data)
-}
-
-// FileUpload is to handle browser clients uploading files to the http server.
-func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileUploadHandler is to handle browser clients uploading files to the http server.
+func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
 	r.ParseForm()
 	var enableTimes int
@@ -101,8 +89,8 @@ func FileUpload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Write(data)
 }
 
-// FileUpdate is to handle updating files' metadata.
-func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileUpdateHandler is to handle updating files' metadata.
+func FileUpdateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	optionType := r.Form.Get("optionType")
@@ -147,8 +135,8 @@ func FileUpdate(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Write(data)
 }
 
-// FileDownload is to handle browser clients downloading files from the http server.
-func FileDownload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileDownloadHandler is to handle browser clients downloading files from the http server.
+func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	fileSha1 := ps.ByName("fileHash")
 	// fileMeta := meta.GetFileMeta(fileSha1)
@@ -179,8 +167,8 @@ func FileDownload(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 	w.Write(data)
 }
 
-// SingleFileQuery is to handle querying files' metadata by fileHash.
-func SingleFileQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// SingleFileQueryHandler is to handle querying files' metadata by fileHash.
+func SingleFileQueryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	fileSha1 := ps.ByName("fileHash")
 
@@ -199,8 +187,8 @@ func SingleFileQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	w.Write(data)
 }
 
-// BatchFilesQuery is to handle querying files' metadata by limitCount.
-func BatchFilesQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// BatchFilesQueryHandler is to handle querying files' metadata by limitCount.
+func BatchFilesQueryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	limitCount, _ := strconv.Atoi(ps.ByName("limitCount"))
 
@@ -219,8 +207,8 @@ func BatchFilesQuery(w http.ResponseWriter, r *http.Request, ps httprouter.Param
 	w.Write(data)
 }
 
-// FileDelete is to handle browser clients deleting files on the http server.
-func FileDelete(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileDeleteHandler is to handle browser clients deleting files on the http server.
+func FileDeleteHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	fileSha1 := r.Form.Get("fileHash")
