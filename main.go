@@ -31,7 +31,7 @@ func main() {
 	router.POST("/user/signup/post", controller.UserSignUpPostHandler)
 	router.GET("/user/signin/get", controller.UserSignInGetHandler)
 	router.POST("/user/signin/post", controller.UserSignInPostHandler)
-	router.POST("/user/info", controller.GetUserInfoHandler)
+	router.POST("/user/info", controller.HTTPIntercepter(controller.GetUserInfoHandler))
 
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatal("Failed to listen and serve, err: \n" + err.Error())

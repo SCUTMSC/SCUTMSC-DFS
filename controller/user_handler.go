@@ -19,7 +19,7 @@ func UserSignUpGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.P
 }
 
 // UserSignUpPostHandler is to handle user signing up
-func UserSignUpPostHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func UserSignUpPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	nickname := r.Form.Get("nickname")
@@ -60,6 +60,13 @@ func UserSignInPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	// Verify nickname and password
 	ok := db.UserSignIn(nickname, password)
 
+	// Generate and update token
+	token := util.GenToken(nickname)
+	if ok := db.UpdateUserToken(nickname, token); !ok {
+		w.Write([]byte("FAILED"))
+		return
+	}
+
 	// Prepare response message
 	resp := util.RespMsg{
 		Code: 0,
@@ -67,9 +74,11 @@ func UserSignInPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		Data: struct {
 			Location string
 			Nickname string
+			Token    string
 		}{
 			Location: "/static/view/home.html",
 			Nickname: nickname,
+			Token:    token,
 		},
 	}
 
