@@ -70,11 +70,11 @@
         var nickname = document.getElementById('nickname');
         var password = document.getElementById('password');
         $.ajax({
-            url: "/user/signin/post",
+            url: "/user/signin",
             type: "POST",
             data: {"nickname" :  nickname.value, "password" :  password.value},
             error: function(err) {
-                    alert(err);
+                alert(err);
             },
             success: function(body) {
                 if (body === "FAILED") {

@@ -20,17 +20,15 @@ func main() {
 
 	// Handle file operations
 	router.POST("/file/upload", controller.FileUploadHandler)
-	router.GET("/file/query/filehash/:fileHash", controller.SingleFileQueryHandler)
-	router.GET("/file/query/limitcount/:limitCount", controller.BatchFilesQueryHandler)
-	router.GET("/file/download/:fileHash", controller.FileDownloadHandler)
+	router.GET("/file/query/filesha1", controller.SingleFileQueryHandler)
+	router.GET("/file/query/limitcount", controller.BatchFilesQueryHandler)
+	router.GET("/file/download", controller.FileDownloadHandler)
 	router.PUT("/file/update", controller.FileUpdateHandler)
 	router.DELETE("/file/delete", controller.FileDeleteHandler)
 
 	// Handle user operations
-	router.GET("/user/signup/get", controller.UserSignUpGetHandler)
-	router.POST("/user/signup/post", controller.UserSignUpPostHandler)
-	router.GET("/user/signin/get", controller.UserSignInGetHandler)
-	router.POST("/user/signin/post", controller.UserSignInPostHandler)
+	router.POST("/user/signup", controller.UserSignUpHandler)
+	router.POST("/user/signin", controller.UserSignInHandler)
 	router.POST("/user/info", controller.HTTPIntercepter(controller.GetUserInfoHandler))
 
 	if err := http.ListenAndServe(":8080", router); err != nil {

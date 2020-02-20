@@ -82,14 +82,14 @@
     var nickname = document.getElementById('nickname');
     var password = document.getElementById('password');
     $.ajax({
-      url: "/user/signup/post",
+      url: "/user/signup",
       type: "POST",
       data: {
         "nickname": nickname.value,
         "password": password.value
       },
       error: function (err) {
-          alert(textStatus);
+        alert(err);
       },
       success: function (data) {
         if (data == 'SUCCESS') {
