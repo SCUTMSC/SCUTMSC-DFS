@@ -4,10 +4,17 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
+	"time"
+)
+
+const (
+	tokSalt = "*#811"
 )
 
 type Sha1Stream struct {
@@ -67,4 +74,18 @@ func GetFileSize(filename string) int64 {
 		return nil
 	})
 	return result
+}
+
+func GenToken(nickname string) string {
+	ts := fmt.Sprintf("%x", time.Now().Unix())
+	tokenPrefix := MD5([]byte(nickname + ts + tokSalt))
+	return tokenPrefix + ts[:8]
+}
+
+func Hex2Dec(val string) int64 {
+	n, err := strconv.ParseInt(val, 16, 0)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return n
 }

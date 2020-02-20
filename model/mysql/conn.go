@@ -1,0 +1,72 @@
+package mysql
+
+import (
+	"database/sql"
+	"log"
+	"os"
+	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+const (
+	username = "root"
+	password = "password"
+	ip       = "127.0.0.1"
+	port     = "3306"
+	database = "dfs"
+)
+
+var db *sql.DB
+
+func init() {
+	var err error
+
+	path := strings.Join([]string{username, ":", password, "@tcp(", ip, ":", port, ")/", database, "?charset=utf8"}, "")
+	db, err = sql.Open("mysql", path)
+	if err != nil {
+		log.Fatal("Fail to open mysql, err: \n", err.Error())
+		os.Exit(1)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Fail to connect mysql, err: \n", err.Error())
+		os.Exit(1)
+	}
+}
+
+func DBConn() *sql.DB {
+	return db
+}
+
+func ParseRows(rows *sql.Rows) []map[string]interface{} {
+	columns, _ := rows.Columns()
+	scanArgs := make([]interface{}, len(columns))
+	values := make([]interface{}, len(columns))
+	for j := range values {
+		scanArgs[j] = &values[j]
+	}
+
+	record := make(map[string]interface{})
+	records := make([]map[string]interface{}, 0)
+	for rows.Next() {
+		err := rows.Scan(scanArgs...)
+		checkErr(err)
+
+		for i, col := range values {
+			if col != nil {
+				record[columns[i]] = col
+			}
+		}
+		records = append(records, record)
+	}
+	return records
+}
+
+func checkErr(err error) {
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+}
