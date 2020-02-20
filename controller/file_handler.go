@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,6 +20,50 @@ import (
 
 // FileUploadHandler is to handle browser clients uploading files to the http server.
 func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	r.ParseForm()
+	fileSha1 := r.Form.Get("fileSha1")
+
+	// Check whether the file has already existed
+	if isExist := db.CheckFileRecord(fileSha1); isExist {
+		// If file exists, try fast upload method
+		fmt.Println("Switch to fast upload mode...")
+		FileFastUploadHandler(w, r, ps)
+	} else {
+		// If file doesn't exist, try normal upload method
+		fmt.Println("Switch to normal upload mode...")
+		FileNormalUploadHandler(w, r, ps)
+	}
+}
+
+// FileFastUploadHandler is to handle browser clients uploading files to the http server in fast mode.
+func FileFastUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	r.ParseForm()
+	nickname := r.Form.Get("nickname")
+	fileSha1 := r.Form.Get("fileSha1")
+
+	// Update user file info
+	ok := db.AppendUserFile(nickname, fileSha1)
+
+	// Return the http response
+	if ok {
+		resp := util.RespMsg{
+			Code: 0,
+			Msg:  "SUCCESS",
+		}
+		w.Write(resp.JSONBytes())
+	} else {
+		resp := util.RespMsg{
+			Code: -1,
+			Msg:  "FAILED",
+		}
+		w.Write(resp.JSONBytes())
+	}
+}
+
+// FileNormalUploadHandler is to handle browser clients uploading files to the http server in normal mode.
+func FileNormalUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
 	r.ParseForm()
 
