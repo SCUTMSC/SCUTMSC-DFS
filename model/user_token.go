@@ -6,6 +6,12 @@ import (
 	"../model/mysql"
 )
 
+// UserTokenRecord is a database record of a user token
+type UserTokenRecord struct {
+	Nickname string
+	Token    string
+}
+
 // UpdateUserToken is to update user token once trying to sign in
 func UpdateUserToken(nickname string, token string) bool {
 	// Prepare SQL statement
@@ -31,7 +37,7 @@ func UpdateUserToken(nickname string, token string) bool {
 // CheckUserToken is to check whether the user token is valid
 func CheckUserToken(nickname string, token string) bool {
 	// Prepare SQL statement
-	stmt, err := mysql.DBConn().Prepare("SELECT user_token FROM tbl_user_token WHERE user_name=?")
+	stmt, err := mysql.DBConn().Prepare("SELECT user_token FROM tbl_user_token WHERE user_name=? LIMIT 1")
 	if err != nil {
 		// log.Fatal("Failed to prepare SQL statement when checking user token, err: \n" + err.Error())
 		fmt.Printf("Failed to prepare SQL statement when checking user token, err: \n" + err.Error())
