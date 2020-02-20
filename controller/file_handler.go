@@ -13,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"../meta"
+	db "../model"
 	"../util"
 )
 
@@ -20,6 +21,9 @@ import (
 func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
 	r.ParseForm()
+
+	nickname := r.Form.Get("nickname")
+
 	var enableTimes int
 	var enableDays int
 	if r.Form.Get("enable_times") == "" {
@@ -77,6 +81,7 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	fileMeta.FileSha1 = util.FileSha1(localFile)
 	// meta.CreateFileMeta(fileMeta)
 	_ = meta.CreateFileMetaDB(fileMeta)
+	_ = db.AppendUserFile(nickname, fileMeta.FileSha1)
 
 	// Return the http response to show the uploaded file
 	data, err := json.Marshal(fileMeta)
@@ -94,7 +99,7 @@ func FileUpdateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	// Parse the http request
 	r.ParseForm()
 	optionType := r.Form.Get("optionType")
-	fileSha1 := r.Form.Get("fileHash")
+	fileSha1 := r.Form.Get("fileSha1")
 	fileName := r.Form.Get("fileName")
 	// fileMeta := meta.GetFileMeta(fileSha1)
 	fileMeta, _ := meta.GetFileMetaDB(fileSha1)
@@ -138,7 +143,8 @@ func FileUpdateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 // FileDownloadHandler is to handle browser clients downloading files from the http server.
 func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
-	fileSha1 := ps.ByName("fileHash")
+	r.ParseForm()
+	fileSha1 := r.Form.Get("fileSha1")
 	// fileMeta := meta.GetFileMeta(fileSha1)
 	fileMeta, _ := meta.GetFileMetaDB(fileSha1)
 
@@ -167,10 +173,11 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Write(data)
 }
 
-// SingleFileQueryHandler is to handle querying files' metadata by fileHash.
+// SingleFileQueryHandler is to handle querying files' metadata by fileSha1.
 func SingleFileQueryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
-	fileSha1 := ps.ByName("fileHash")
+	r.ParseForm()
+	fileSha1 := r.Form.Get("fileSha1")
 
 	// Use file hash to query file's metadata
 	// fileMeta := meta.GetFileMeta(fileSha1)
@@ -190,11 +197,17 @@ func SingleFileQueryHandler(w http.ResponseWriter, r *http.Request, ps httproute
 // BatchFilesQueryHandler is to handle querying files' metadata by limitCount.
 func BatchFilesQueryHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
-	limitCount, _ := strconv.Atoi(ps.ByName("limitCount"))
+	r.ParseForm()
+	nickname := r.Form.Get("nickname")
+	limitCount, _ := strconv.Atoi(r.Form.Get("limitCount"))
 
 	// Use limit count to query files' metadata
-	// fileMetas := meta.GetFileMetasByCreateAt(limitCount)
-	fileMetas, _ := meta.GetFileMetasByCreateAtDB(limitCount)
+	var fileMetas []meta.FileMeta
+	userFileRecords, _ := db.GetUserFiles(nickname, limitCount)
+	for _, userFileRecord := range userFileRecords {
+		fileMeta, _ := meta.GetFileMetaDB(userFileRecord.FileSha1)
+		fileMetas = append(fileMetas, fileMeta)
+	}
 	data, err := json.Marshal(fileMetas)
 	if err != nil {
 		log.Fatal("Failed to convert fileMetas to JSON, err: \n" + err.Error())
@@ -211,7 +224,8 @@ func BatchFilesQueryHandler(w http.ResponseWriter, r *http.Request, ps httproute
 func FileDeleteHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
-	fileSha1 := r.Form.Get("fileHash")
+	nickname := r.Form.Get("nickname")
+	fileSha1 := r.Form.Get("fileSha1")
 	// fileMeta := meta.GetFileMeta(fileSha1)
 	fileMeta, _ := meta.GetFileMetaDB(fileSha1)
 
@@ -226,6 +240,7 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	// Delete the metadata of a file
 	// meta.DeleteFileMeta(fileSha1)
 	_ = meta.DeleteFileMetaDB(fileSha1)
+	_ = db.DeleteUserFile(nickname, fileSha1)
 
 	// Return the http response
 	data, err := json.Marshal(fileMeta)

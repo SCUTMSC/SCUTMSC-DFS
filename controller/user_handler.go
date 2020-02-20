@@ -13,13 +13,8 @@ const (
 	pwdSalt = "*#811" // Custom number to help encode password
 )
 
-// UserSignUpGetHandler is to handle directing to signup.html
-func UserSignUpGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	http.Redirect(w, r, "/static/view/signup.html", http.StatusFound)
-}
-
-// UserSignUpPostHandler is to handle user signing up
-func UserSignUpPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// UserSignUpHandler is to handle user signing up
+func UserSignUpHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	nickname := r.Form.Get("nickname")
@@ -42,13 +37,8 @@ func UserSignUpPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	}
 }
 
-// UserSignInGetHandler is to handle directing to signup.html
-func UserSignInGetHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	http.Redirect(w, r, "/static/view/signin.html", http.StatusFound)
-}
-
-// UserSignInPostHandler is to handle user signing in
-func UserSignInPostHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+// UserSignInHandler is to handle user signing in
+func UserSignInHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	nickname := r.Form.Get("nickname")
