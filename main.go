@@ -19,6 +19,11 @@ func main() {
 	router.GET("/", controller.IndexHandler)
 
 	// Handle file operations
+	router.POST("/file/mpupload/init", controller.FileMPUploadInitHandler)
+	router.POST("/file/mpupload/part", controller.FileMPUploadPartHandler)
+	router.POST("/file/mpupload/finish", controller.FileMPUploadFinishHandler)
+	router.POST("/file/mpupload/cancel", controller.FileMPUploadCancelHandler)
+	router.POST("/file/mpupload/status", controller.FileMPUploadStatusHandler)
 	router.POST("/file/upload", controller.FileUploadHandler)
 	router.GET("/file/query/filesha1", controller.SingleFileQueryHandler)
 	router.GET("/file/query/limitcount", controller.BatchFilesQueryHandler)
@@ -29,7 +34,7 @@ func main() {
 	// Handle user operations
 	router.POST("/user/signup", controller.UserSignUpHandler)
 	router.POST("/user/signin", controller.UserSignInHandler)
-	router.POST("/user/info", controller.HTTPIntercepter(controller.GetUserInfoHandler))
+	router.POST("/user/info", controller.AuthIntercepter(controller.GetUserInfoHandler))
 
 	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatal("Failed to listen and serve, err: \n" + err.Error())

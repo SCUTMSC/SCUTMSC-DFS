@@ -23,6 +23,7 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	// Parse the http request
 	r.ParseForm()
 	fileSha1 := r.Form.Get("fileSha1")
+	fileSize, _ := strconv.Atoi(r.Form.Get("fileSize"))
 
 	// Check whether the file has already existed
 	if isExist := db.CheckFileRecord(fileSha1); isExist {
@@ -30,9 +31,16 @@ func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		fmt.Println("Switch to fast upload mode...")
 		FileFastUploadHandler(w, r, ps)
 	} else {
-		// If file doesn't exist, try normal upload method
-		fmt.Println("Switch to normal upload mode...")
-		FileNormalUploadHandler(w, r, ps)
+		// If file doesn't exist, check whether the file is large enough
+		if fileSize > 5*1024*1024 {
+			// If file is larger than 5MB, try multipart upload method
+			fmt.Println("Switch to multipart upload mode...")
+			// TODO: FileMPUploadInitHanlder(w, r, ps)
+		} else {
+			// If file isn't larger than 5MB, try normal upload method
+			fmt.Println("Switch to normal upload mode...")
+			FileNormalUploadHandler(w, r, ps)
+		}
 	}
 }
 
@@ -275,12 +283,12 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	fileMeta, _ := meta.GetFileMetaDB(fileSha1)
 
 	// Delete the data of a file
-	/*if err := os.Remove(fileMeta.FilePath); err != nil {
-		log.Fatal("Failed to remove file when deleting, err: \n" + err.Error())
+	// if err := os.Remove(fileMeta.FilePath); err != nil {
+	// 	log.Fatal("Failed to remove file when deleting, err: \n" + err.Error())
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}*/
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Delete the metadata of a file
 	// meta.DeleteFileMeta(fileSha1)
