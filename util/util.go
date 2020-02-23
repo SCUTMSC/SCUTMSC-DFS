@@ -82,10 +82,70 @@ func GenToken(nickname string) string {
 	return tokenPrefix + ts[:8]
 }
 
+func GenUploadID(nickname string) string {
+	return nickname + fmt.Sprintf("%x", time.Now().UnixNano())
+}
+
 func Hex2Dec(val string) int64 {
 	n, err := strconv.ParseInt(val, 16, 0)
 	if err != nil {
 		fmt.Println(err)
 	}
 	return n
+}
+
+func MergeChunks(desDirPath string, srcDirPath string, fileName string, n int) error {
+	desFilePath := desDirPath + "/" + fileName
+	mergedFile, err := os.OpenFile(desFilePath, os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer mergedFile.Close()
+
+	dir, err := os.Open(srcDirPath)
+	if err != nil {
+		return err
+	}
+	fileInfos, err := dir.Readdir(n)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+
+	for _, fileInfo := range fileInfos {
+		srcFilePath := srcDirPath + "/" + fileInfo.Name()
+		chunkFile, err := os.Open(srcFilePath)
+		if err != nil {
+			return err
+		}
+		defer chunkFile.Close()
+
+		_, err = io.Copy(mergedFile, chunkFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func ClearChunks(srcDirPath string, n int) error {
+	dir, err := os.Open(srcDirPath)
+	if err != nil {
+		return err
+	}
+	fileInfos, err := dir.Readdir(n)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+
+	for _, fileInfo := range fileInfos {
+		srcFilePath := srcDirPath + "/" + fileInfo.Name()
+		if err := os.Remove(srcFilePath); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

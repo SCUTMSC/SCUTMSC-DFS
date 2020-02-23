@@ -36,7 +36,7 @@ type UserRecord struct {
 func UserSignUp(nickname string, password string) bool {
 	// Prepare SQL statement
 	stmt, err := mysql.DBConn().Prepare(
-		"INSERT ignore INTO tbl_user (`nick_name`, `user_pwd`) values (?, ?)")
+		"INSERT ignore INTO tbl_user (`nick_name`, `user_pwd`) VALUES (?, ?)")
 	if err != nil {
 		// log.Fatal("Failed to prepare SQL statement when signuping, err: \n" + err.Error())
 		fmt.Printf("Failed to prepare SQL statement when signuping, err: \n" + err.Error())

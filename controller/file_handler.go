@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,8 +18,8 @@ import (
 	"../util"
 )
 
-// FileUploadHandler is to handle browser clients uploading files to the http server.
-func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileNormalUploadHandler is to handle browser clients uploading files to the http server in normal mode.
+func FileNormalUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
 	r.ParseForm()
 
@@ -140,8 +141,8 @@ func FileUpdateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	w.Write(data)
 }
 
-// FileDownloadHandler is to handle browser clients downloading files from the http server.
-func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileDownloadAttachmentHandler is to handle browser clients downloading attachments from the http server.
+func FileDownloadAttachmentHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	fileSha1 := r.Form.Get("fileSha1")
@@ -171,6 +172,23 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("Content-Disposition", "attachment; filename="+"\""+fileMeta.FileName+"\"")
 	w.Write(data)
+}
+
+// FileDownloadURLHandler is to handle browser clients generating urls from the http server.
+func FileDownloadURLHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	r.ParseForm()
+	nickname := r.Form.Get("nickname")
+	token := r.Form.Get("token")
+	fileSha1 := r.Form.Get("fileSha1")
+
+	// Generate the download url
+	url := fmt.Sprintf(
+		"http://%s/file/attachment/?nickname=%s&token=%s&fileSha1=%s",
+		r.Host, nickname, token, fileSha1)
+
+	// Return the http response
+	w.Write([]byte(url))
 }
 
 // SingleFileQueryHandler is to handle querying files' metadata by fileSha1.
@@ -230,12 +248,12 @@ func FileDeleteHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	fileMeta, _ := meta.GetFileMetaDB(fileSha1)
 
 	// Delete the data of a file
-	/*if err := os.Remove(fileMeta.FilePath); err != nil {
-		log.Fatal("Failed to remove file when deleting, err: \n" + err.Error())
+	// if err := os.Remove(fileMeta.FilePath); err != nil {
+	// 	log.Fatal("Failed to remove file when deleting, err: \n" + err.Error())
 
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}*/
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Delete the metadata of a file
 	// meta.DeleteFileMeta(fileSha1)

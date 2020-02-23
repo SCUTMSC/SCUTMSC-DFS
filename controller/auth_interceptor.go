@@ -10,8 +10,8 @@ import (
 	"../util"
 )
 
-// HTTPIntercepter is to do some verification before entering the handler
-func HTTPIntercepter(h httprouter.Handle) httprouter.Handle {
+// AuthIntercepter is to do some verification before entering the handler
+func AuthIntercepter(h httprouter.Handle) httprouter.Handle {
 	return httprouter.Handle(
 		func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			// Parse the http request

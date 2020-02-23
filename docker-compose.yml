@@ -1,0 +1,52 @@
+version: '3'
+services:
+  golang:
+    restart: always
+    image: golang:latest
+    container_name: golang
+    ports:
+      - "8080:8080"
+    networks:
+      scutdfs: 
+        aliases:
+          - golang
+    build: ./
+    volumes:  #挂载,文件映射
+      - ./go/src/SCUTMSC-DFS:/go/src/SCUTMSC-DFS
+    command: go run /go/src/SCUTMSC-DFS/main.go
+
+  redis:
+    restart: always
+    image: redis:3.2
+    container_name: redis-master
+    ports:
+      - "6379:6379"
+    networks:
+      scutdfs:
+        aliases:
+          - redis-master
+    volumes:
+      - ./redis/conf:/usr/local/etc/redis/redis.conf
+      - ./redis/data:/data
+    command: redis-server --port 6379 --requirepass password /usr/local/etc/redis/redis.conf
+
+  mysql:
+    restart: always
+    image: mysql:5.7
+    container_name: mysql-master
+    ports:
+      - "3306:3306"
+    volumes: 
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/logs:/logs
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"
+      MYSQL_USER: "root"
+      MYSQL_PASS: "password"
+    networks:
+      scutdfs:
+        aliases:
+          - mysql-master
+          
