@@ -18,58 +18,6 @@ import (
 	"../util"
 )
 
-// FileUploadHandler is to handle browser clients uploading files to the http server.
-func FileUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// Parse the http request
-	r.ParseForm()
-	fileSha1 := r.Form.Get("fileSha1")
-	fileSize, _ := strconv.Atoi(r.Form.Get("fileSize"))
-
-	// Check whether the file has already existed
-	if isExist := db.CheckFileRecord(fileSha1); isExist {
-		// If file exists, try fast upload method
-		fmt.Println("Switch to fast upload mode...")
-		FileFastUploadHandler(w, r, ps)
-	} else {
-		// If file doesn't exist, check whether the file is large enough
-		if fileSize > 5*1024*1024 {
-			// If file is larger than 5MB, try multipart upload method
-			fmt.Println("Switch to multipart upload mode...")
-			// TODO: FileMPUploadInitHanlder(w, r, ps)
-		} else {
-			// If file isn't larger than 5MB, try normal upload method
-			fmt.Println("Switch to normal upload mode...")
-			FileNormalUploadHandler(w, r, ps)
-		}
-	}
-}
-
-// FileFastUploadHandler is to handle browser clients uploading files to the http server in fast mode.
-func FileFastUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// Parse the http request
-	r.ParseForm()
-	nickname := r.Form.Get("nickname")
-	fileSha1 := r.Form.Get("fileSha1")
-
-	// Update user file info
-	ok := db.AppendUserFile(nickname, fileSha1)
-
-	// Return the http response
-	if ok {
-		resp := util.RespMsg{
-			Code: 0,
-			Msg:  "SUCCESS",
-		}
-		w.Write(resp.JSONBytes())
-	} else {
-		resp := util.RespMsg{
-			Code: -1,
-			Msg:  "FAILED",
-		}
-		w.Write(resp.JSONBytes())
-	}
-}
-
 // FileNormalUploadHandler is to handle browser clients uploading files to the http server in normal mode.
 func FileNormalUploadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request to get the uploaded file
@@ -193,8 +141,8 @@ func FileUpdateHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	w.Write(data)
 }
 
-// FileDownloadHandler is to handle browser clients downloading files from the http server.
-func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+// FileDownloadAttachmentHandler is to handle browser clients downloading attachments from the http server.
+func FileDownloadAttachmentHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Parse the http request
 	r.ParseForm()
 	fileSha1 := r.Form.Get("fileSha1")
@@ -224,6 +172,23 @@ func FileDownloadHandler(w http.ResponseWriter, r *http.Request, ps httprouter.P
 	w.Header().Set("Content-Type", "application/octect-stream")
 	w.Header().Set("Content-Disposition", "attachment; filename="+"\""+fileMeta.FileName+"\"")
 	w.Write(data)
+}
+
+// FileDownloadURLHandler is to handle browser clients generating urls from the http server.
+func FileDownloadURLHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	// Parse the http request
+	r.ParseForm()
+	nickname := r.Form.Get("nickname")
+	token := r.Form.Get("token")
+	fileSha1 := r.Form.Get("fileSha1")
+
+	// Generate the download url
+	url := fmt.Sprintf(
+		"http://%s/file/attachment/?nickname=%s&token=%s&fileSha1=%s",
+		r.Host, nickname, token, fileSha1)
+
+	// Return the http response
+	w.Write([]byte(url))
 }
 
 // SingleFileQueryHandler is to handle querying files' metadata by fileSha1.
